@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-#k!m^xzc60gchjh$o5g__z&owy)0yenm-cgh8jv4@z9k^u(bta
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['moneyswap.pythonanywhere.com']
 
 
 # Application definition
@@ -175,4 +175,5 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
     SECURE_HSTS_PRELOAD = True
