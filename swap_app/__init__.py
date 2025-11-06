@@ -1,0 +1,1 @@
+default_app_config = 'swap_app.apps.SwapAppConfig'

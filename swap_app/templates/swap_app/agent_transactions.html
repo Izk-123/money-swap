@@ -1,0 +1,290 @@
+{% extends 'swap_app/base.html' %}
+
+{% block title %}Agent Transactions - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-list-check"></i> Transaction History
+    </h1>
+    <div class="btn-group">
+        <a href="{% url 'agent_dashboard' %}" class="btn btn-outline-primary">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a href="{% url 'agent_wallet' %}" class="btn btn-outline-primary">
+            <i class="bi bi-wallet"></i> Wallet
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-primary">{{ total_transactions }}</h3>
+                <p class="card-text">Total Transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-success">{{ completed_count }}</h3>
+                <p class="card-text">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-warning">{{ pending_count }}</h3>
+                <p class="card-text">Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-info">{{ active_count }}</h3>
+                <p class="card-text">Active</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card swap-card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h6 class="card-title mb-3">Filter Transactions</h6>
+                <div class="btn-group" role="group">
+                    <a href="?status=all" class="btn btn-outline-primary {% if request.GET.status == 'all' or not request.GET.status %}active{% endif %}">All</a>
+                    <a href="?status=completed" class="btn btn-outline-success {% if request.GET.status == 'completed' %}active{% endif %}">Completed</a>
+                    <a href="?status=pending" class="btn btn-outline-warning {% if request.GET.status == 'pending' %}active{% endif %}">Pending</a>
+                    <a href="?status=active" class="btn btn-outline-info {% if request.GET.status == 'active' %}active{% endif %}">Active</a>
+                    <a href="?status=failed" class="btn btn-outline-danger {% if request.GET.status == 'failed' %}active{% endif %}">Failed</a>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search reference..." id="searchInput">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card swap-card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">All Transactions</h5>
+    </div>
+    <div class="card-body">
+        {% if transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Client</th>
+                        <th>Amount</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Commission</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>
+                            <strong>{{ transaction.reference }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                {% if transaction.status == 'PENDING' %}
+                                    Waiting for response
+                                {% elif transaction.status == 'ACCEPTED' %}
+                                    Waiting for payment
+                                {% elif transaction.status == 'PAID_BANK' %}
+                                    Ready to send
+                                {% elif transaction.status == 'SENT_WALLET' %}
+                                    Waiting confirmation
+                                {% elif transaction.status == 'COMPLETE' %}
+                                    Completed
+                                {% elif transaction.status == 'REJECTED' %}
+                                    Rejected
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {{ transaction.client.username }}
+                            {% if transaction.client.location_address %}
+                            <br>
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt"></i> {{ transaction.client.location_address }}
+                            </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            MWK {{ transaction.amount|floatformat:2 }}
+                            <br>
+                            <small class="text-muted">
+                                Net: MWK {{ transaction.net_amount|floatformat:2 }}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if transaction.to_service == 'TNM' %}bg-success
+                                {% else %}bg-warning text-dark{% endif %}">
+                                {{ transaction.get_to_service_display }}
+                            </span>
+                            <br>
+                            <small class="text-muted">To: {{ transaction.dest_number }}</small>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if transaction.status == 'COMPLETE' %}bg-success
+                                {% elif transaction.status == 'PENDING' %}bg-warning
+                                {% elif transaction.status == 'REJECTED' or transaction.status == 'CANCELLED' %}bg-danger
+                                {% elif transaction.status == 'ACCEPTED' %}bg-info
+                                {% elif transaction.status == 'PAID_BANK' %}bg-primary
+                                {% elif transaction.status == 'SENT_WALLET' %}bg-success
+                                {% else %}bg-secondary{% endif %}">
+                                {{ transaction.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-success">
+                            <strong>MWK {{ transaction.agent_fee|floatformat:2 }}</strong>
+                        </td>
+                        <td>
+                            {{ transaction.created_at|date:"M d, Y" }}
+                            <br>
+                            <small class="text-muted">{{ transaction.created_at|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'swap_detail' transaction.id %}" class="btn btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                {% if transaction.status == 'PENDING' %}
+                                <a href="{% url 'swap_detail' transaction.id %}" class="btn btn-outline-success" title="Respond">
+                                    <i class="bi bi-reply"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if transaction.status == 'PAID_BANK' %}
+                                <a href="{% url 'swap_detail' transaction.id %}" class="btn btn-outline-warning" title="Send Payment">
+                                    <i class="bi bi-send"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Transaction pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-list-check display-1 text-muted"></i>
+            <h4 class="mt-3">No transactions yet</h4>
+            <p class="text-muted">You haven't processed any swap transactions yet.</p>
+            <a href="{% url 'agent_dashboard' %}" class="btn btn-primary">
+                <i class="bi bi-speedometer2"></i> Go to Dashboard
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="card swap-card mt-4">
+    <div class="card-body text-center">
+        <h6 class="card-title">Export Transactions</h6>
+        <p class="text-muted mb-3">Download your transaction history for record keeping</p>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" disabled>
+                <i class="bi bi-file-earmark-pdf"></i> Export as PDF
+            </button>
+            <button class="btn btn-outline-success" disabled>
+                <i class="bi bi-file-earmark-excel"></i> Export as Excel
+            </button>
+            <button class="btn btn-outline-secondary" disabled>
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+        </div>
+        <small class="text-muted d-block mt-2">Export features coming soon</small>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const table = document.getElementById('transactionsTable');
+    
+    if (table) {
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        function filterTable() {
+            const filter = searchInput.value.toLowerCase();
+            for (let i = 0; i < rows.length; i++) {
+                const reference = rows[i].getElementsByTagName('td')[0].textContent.toLowerCase();
+                const client = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase();
+                if (reference.includes(filter) || client.includes(filter)) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+
+        searchButton.addEventListener('click', filterTable);
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                filterTable();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

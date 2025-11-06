@@ -1,0 +1,267 @@
+{% extends 'swap_app/base.html' %}
+
+{% block title %}Agent Wallet - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-wallet"></i> Agent Wallet
+    </h1>
+    <div class="btn-group">
+        <a href="{% url 'agent_dashboard' %}" class="btn btn-outline-primary">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a href="{% url 'agent_transactions' %}" class="btn btn-outline-primary">
+            <i class="bi bi-list-check"></i> Transactions
+        </a>
+    </div>
+</div>
+
+<!-- Wallet Summary -->
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <i class="bi bi-wallet2 display-4 text-primary"></i>
+                <h3 class="card-title mt-2">MWK {{ available_balance|floatformat:2 }}</h3>
+                <p class="card-text">Available Balance</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <i class="bi bi-graph-up display-4 text-success"></i>
+                <h3 class="card-title mt-2">MWK {{ total_earnings|floatformat:2 }}</h3>
+                <p class="card-text">Total Earnings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card swap-card text-center">
+            <div class="card-body">
+                <i class="bi bi-people display-4 text-info"></i>
+                <h3 class="card-title mt-2">{{ total_swaps_count }}</h3>
+                <p class="card-text">Completed Swaps</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Wallets -->
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card swap-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bank"></i> Bank Account
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="display-6 text-primary">MWK 0.00</div>
+                <p class="text-muted">Available Balance</p>
+                <div class="mt-3">
+                    <small class="text-muted d-block">Account Details</small>
+                    <strong>{{ agent.bank_name }}</strong><br>
+                    <code>{{ agent.bank_account }}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card swap-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-phone"></i> TNM Mpamba
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="display-6 text-success">MWK {{ agent.float_mpamba|floatformat:2 }}</div>
+                <p class="text-muted">Available Float</p>
+                <div class="mt-3">
+                    <small class="text-muted d-block">Wallet Number</small>
+                    <strong>{{ agent.mpamba_number }}</strong>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">Commission Earned</small><br>
+                    <strong>MWK 
+                        {% for wallet in wallets %}
+                            {% if wallet.service_type == 'mpamba' %}
+                                {{ wallet.total_earnings|floatformat:2 }}
+                            {% endif %}
+                        {% endfor %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card swap-card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-phone"></i> Airtel Money
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="display-6 text-warning">MWK {{ agent.float_airtel|floatformat:2 }}</div>
+                <p class="text-muted">Available Float</p>
+                <div class="mt-3">
+                    <small class="text-muted d-block">Wallet Number</small>
+                    <strong>{{ agent.airtel_number }}</strong>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">Commission Earned</small><br>
+                    <strong>MWK 
+                        {% for wallet in wallets %}
+                            {% if wallet.service_type == 'airtel_money' %}
+                                {{ wallet.total_earnings|floatformat:2 }}
+                            {% endif %}
+                        {% endfor %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Earnings Breakdown -->
+<div class="card swap-card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-pie-chart"></i> Earnings Breakdown
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Completed Swaps</th>
+                                <th>Total Commission</th>
+                                <th>Available Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wallet in wallets %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        {% if wallet.service_type == 'mpamba' %}
+                                            TNM Mpamba
+                                        {% elif wallet.service_type == 'airtel_money' %}
+                                            Airtel Money
+                                        {% else %}
+                                            Bank
+                                        {% endif %}
+                                    </strong>
+                                </td>
+                                <td>
+                                    {% if wallet.service_type == 'mpamba' %}
+                                        {{ tnm_completed_count }}
+                                    {% elif wallet.service_type == 'airtel_money' %}
+                                        {{ airtel_completed_count }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </td>
+                                <td class="text-success">
+                                    <strong>MWK {{ wallet.total_earnings|floatformat:2 }}</strong>
+                                </td>
+                                <td class="text-primary">
+                                    <strong>MWK {{ wallet.available_balance|floatformat:2 }}</strong>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    No wallet data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Quick Stats</h6>
+                        <div class="mb-3">
+                            <small class="text-muted">Average Commission per Swap</small>
+                            <div class="fw-bold">
+                                MWK {{ average_commission|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Success Rate</small>
+                            <div class="fw-bold">
+                                {% if total_swaps_count > 0 %}
+                                    {{ completed_swaps_count }} / {{ total_swaps_count }} ({{ success_rate }}%)
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted">Response Time</small>
+                            <div class="fw-bold">{{ agent.response_time }} minutes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Commission Earnings -->
+<div class="card swap-card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-clock-history"></i> Recent Commissions
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if recent_swaps %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Amount</th>
+                        <th>Service</th>
+                        <th>Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for swap in recent_swaps %}
+                    <tr>
+                        <td>{{ swap.updated_at|date:"M d, H:i" }}</td>
+                        <td><small>{{ swap.reference }}</small></td>
+                        <td>MWK {{ swap.amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if swap.to_service == 'TNM' %}bg-success
+                                {% else %}bg-warning text-dark{% endif %}">
+                                {{ swap.get_to_service_display }}
+                            </span>
+                        </td>
+                        <td class="text-success">
+                            <strong>MWK {{ swap.agent_fee|floatformat:2 }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3">No commission earnings yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

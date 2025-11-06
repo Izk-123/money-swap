@@ -1,0 +1,44 @@
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+[data-bs-theme="dark"] {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #ffffff;
+    --border-color: #444;
+}
+
+body {
+    background-color: var(--bg-color, white);
+    color: var(--text-color, black);
+}
+
+.swap-card {
+    background-color: var(--card-bg, white);
+    border: 1px solid var(--border-color, #dee2e6);
+}
+
+.theme-toggle {
+    cursor: pointer;
+}
+
+/* Additional custom styles */
+.min-vh-50 {
+    min-height: 50vh;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}

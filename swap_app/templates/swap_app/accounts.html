@@ -1,0 +1,303 @@
+{% extends 'swap_app/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}My Accounts - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-wallet"></i> My Accounts
+    </h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+        <i class="bi bi-plus-circle"></i> Add Account
+    </button>
+</div>
+
+<!-- Accounts List -->
+<div class="row">
+    {% for account in accounts %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card swap-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            {% if account.account_type == 'bank' %}
+                                <i class="bi bi-bank text-primary"></i>
+                            {% elif account.account_type == 'mpamba' %}
+                                <i class="bi bi-phone text-success"></i>
+                            {% else %}
+                                <i class="bi bi-phone text-warning"></i>
+                            {% endif %}
+                            {{ account.get_account_type_display }}
+                        </h5>
+                        <p class="card-text text-muted mb-0">{{ account.account_name }}</p>
+                    </div>
+                    <span class="badge {% if account.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                        {% if account.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-1">
+                        <strong>Account Number:</strong>
+                        <code class="ms-1">{{ account.account_number }}</code>
+                    </p>
+                    {% if account.bank_name %}
+                    <p class="mb-1">
+                        <strong>Bank:</strong> {{ account.bank_name }}
+                    </p>
+                    {% endif %}
+                    <p class="mb-0">
+                        <strong>Balance:</strong> 
+                        <span class="fw-bold text-primary">MWK {{ account.balance|floatformat:2 }}</span>
+                    </p>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <small class="text-muted">
+                        Added: {{ account.created_at|date:"M d, Y" }}
+                    </small>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" 
+                                data-bs-target="#editAccountModal{{ account.id }}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        {% if account.is_active %}
+                        <form method="post" action="{% url 'deactivate_account' account.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning" title="Deactivate">
+                                <i class="bi bi-pause"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'activate_account' account.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-success" title="Activate">
+                                <i class="bi bi-play"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card swap-card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-wallet display-1 text-muted"></i>
+                <h4 class="mt-3">No accounts yet</h4>
+                <p class="text-muted">Add your bank or mobile money accounts to get started with swaps.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+                    <i class="bi bi-plus-circle"></i> Add Your First Account
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Account Summary -->
+{% if accounts %}
+<div class="card swap-card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-graph-up"></i> Account Summary
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="border-end">
+                    <h4 class="text-primary">{{ accounts|length }}</h4>
+                    <small class="text-muted">Total Accounts</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="border-end">
+                    <h4 class="text-success">{{ accounts|length }}</h4>
+                    <small class="text-muted">Active Accounts</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="border-end">
+                    <h4 class="text-info">
+                        {% with bank_accounts=accounts|dictsort:"account_type" %}
+                            {{ bank_accounts|length }}
+                        {% endwith %}
+                    </h4>
+                    <small class="text-muted">Bank Accounts</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div>
+                    <h4 class="text-warning">
+                        MWK 
+                        {% with total_balance=0 %}
+                            {% for account in accounts %}
+                                {{ total_balance|add:account.balance }}
+                            {% endfor %}
+                            {{ total_balance|floatformat:2 }}
+                        {% endwith %}
+                    </h4>
+                    <small class="text-muted">Total Balance</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add Account Modal -->
+<div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAccountModalLabel">
+                    <i class="bi bi-plus-circle"></i> Add New Account
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'add_account' %}">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button type="button" class="btn btn-secondary me-md-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Account Modals -->
+{% for account in accounts %}
+<div class="modal fade" id="editAccountModal{{ account.id }}" tabindex="-1" aria-labelledby="editAccountModalLabel{{ account.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAccountModalLabel{{ account.id }}">
+                    <i class="bi bi-pencil"></i> Edit Account
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'edit_account' account.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="account_type{{ account.id }}" class="form-label">Account Type</label>
+                        <select class="form-select" id="account_type{{ account.id }}" name="account_type" required>
+                            <option value="bank" {% if account.account_type == 'bank' %}selected{% endif %}>Bank Account</option>
+                            <option value="mpamba" {% if account.account_type == 'mpamba' %}selected{% endif %}>TNM Mpamba</option>
+                            <option value="airtel_money" {% if account.account_type == 'airtel_money' %}selected{% endif %}>Airtel Money</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="account_name{{ account.id }}" class="form-label">Account Name</label>
+                        <input type="text" class="form-control" id="account_name{{ account.id }}" name="account_name" 
+                               value="{{ account.account_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="account_number{{ account.id }}" class="form-label">Account Number</label>
+                        <input type="text" class="form-control" id="account_number{{ account.id }}" name="account_number" 
+                               value="{{ account.account_number }}" required>
+                    </div>
+                    <div class="mb-3" id="bank_name_container{{ account.id }}">
+                        <label for="bank_name{{ account.id }}" class="form-label">Bank Name</label>
+                        <input type="text" class="form-control" id="bank_name{{ account.id }}" name="bank_name" 
+                               value="{{ account.bank_name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="balance{{ account.id }}" class="form-label">Balance (MWK)</label>
+                        <input type="number" step="0.01" class="form-control" id="balance{{ account.id }}" name="balance" 
+                               value="{{ account.balance }}" required>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-secondary me-md-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Quick Actions -->
+<div class="card swap-card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center mb-3">
+                <div class="p-3 border rounded">
+                    <i class="bi bi-arrow-left-right display-6 text-primary"></i>
+                    <h6 class="mt-2">Create Swap</h6>
+                    <p class="text-muted small">Start a new money swap</p>
+                    <a href="{% url 'create_swap' %}" class="btn btn-sm btn-outline-primary">Get Started</a>
+                </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="p-3 border rounded">
+                    <i class="bi bi-list-ul display-6 text-success"></i>
+                    <h6 class="mt-2">View Swaps</h6>
+                    <p class="text-muted small">Check your swap history</p>
+                    <a href="{% url 'client_swaps' %}" class="btn btn-sm btn-outline-success">View History</a>
+                </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="p-3 border rounded">
+                    <i class="bi bi-people display-6 text-info"></i>
+                    <h6 class="mt-2">Find Agents</h6>
+                    <p class="text-muted small">Browse available agents</p>
+                    <a href="{% url 'agent_list' %}" class="btn btn-sm btn-outline-info">Find Agents</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide bank name field based on account type
+    function toggleBankField(selectElement, containerId) {
+        const bankContainer = document.getElementById(containerId);
+        if (selectElement.value === 'bank') {
+            bankContainer.style.display = 'block';
+        } else {
+            bankContainer.style.display = 'none';
+        }
+    }
+
+    // Initialize for all account type selects
+    const accountTypeSelects = document.querySelectorAll('select[name="account_type"]');
+    accountTypeSelects.forEach(select => {
+        const containerId = 'bank_name_container' + select.id.replace('account_type', '');
+        toggleBankField(select, containerId);
+        
+        select.addEventListener('change', function() {
+            toggleBankField(this, containerId);
+        });
+    });
+
+    // Format account number input based on type
+    const accountNumberInputs = document.querySelectorAll('input[name="account_number"]');
+    accountNumberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const accountTypeSelect = document.getElementById('account_type' + this.id.replace('account_number', ''));
+            if (accountTypeSelect && (accountTypeSelect.value === 'mpamba' || accountTypeSelect.value === 'airtel_money')) {
+                // Format as phone number
+                this.value = this.value.replace(/\D/g, '');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

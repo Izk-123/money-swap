@@ -1,0 +1,171 @@
+{% extends 'swap_app/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Upload Payment Proof - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card swap-card">
+            <div class="card-header">
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-upload"></i> Upload Payment Proof
+                </h2>
+            </div>
+            <div class="card-body">
+                <!-- Swap Information -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Swap Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <th>Reference:</th>
+                                        <td><strong>{{ swap.reference }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Amount:</th>
+                                        <td>MWK {{ swap.amount|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Agent:</th>
+                                        <td>{{ swap.agent.user.username }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <th>From:</th>
+                                        <td>{{ swap.get_from_service_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>To:</th>
+                                        <td>{{ swap.get_to_service_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Recipient:</th>
+                                        <td>{{ swap.dest_number }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent Bank Details -->
+                <div class="card border-primary mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-bank"></i> Agent Bank Details
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            Please transfer <strong>MWK {{ swap.amount|floatformat:2 }}</strong> to the agent's bank account below.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Bank Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>Bank Name:</th>
+                                        <td>{{ swap.agent.bank_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Account Name:</th>
+                                        <td>{{ swap.agent.user.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Account Number:</th>
+                                        <td><strong>{{ swap.agent.bank_account }}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Payment Reference</h6>
+                                <div class="alert alert-warning">
+                                    <strong>Important:</strong> Use this reference when making payment:
+                                    <div class="mt-2">
+                                        <code class="fs-5">{{ swap.reference }}</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Upload Proof of Payment</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form|crispy }}
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb"></i>
+                                <strong>Accepted formats:</strong> JPG, PNG, PDF (Max 5MB)<br>
+                                <strong>What to include:</strong> Screenshot of bank transfer confirmation showing:
+                                <ul class="mb-0 mt-1">
+                                    <li>Agent's account details</li>
+                                    <li>Transfer amount (MWK {{ swap.amount|floatformat:2 }})</li>
+                                    <li>Reference number ({{ swap.reference }})</li>
+                                    <li>Date and time of transfer</li>
+                                </ul>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'swap_detail' swap.id %}" class="btn btn-secondary me-md-2">
+                                    <i class="bi bi-arrow-left"></i> Back to Swap
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Upload Proof
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-question-circle"></i> Need Help?
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Bank Transfer Steps:</h6>
+                                <ol class="small">
+                                    <li>Login to your bank's mobile app or internet banking</li>
+                                    <li>Add {{ swap.agent.user.username }} as a beneficiary</li>
+                                    <li>Use account number: {{ swap.agent.bank_account }}</li>
+                                    <li>Enter amount: MWK {{ swap.amount|floatformat:2 }}</li>
+                                    <li>Use reference: <strong>{{ swap.reference }}</strong></li>
+                                    <li>Take screenshot of confirmation page</li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>What Happens Next?</h6>
+                                <ul class="small">
+                                    <li>Agent will verify your payment</li>
+                                    <li>Agent will send MWK {{ swap.net_amount|floatformat:2 }} to {{ swap.dest_number }}</li>
+                                    <li>You'll receive confirmation when completed</li>
+                                    <li>You can track progress on swap details page</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

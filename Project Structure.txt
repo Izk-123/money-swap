@@ -1,0 +1,45 @@
+moneyswap/
+├── manage.py
+├── requirements.txt
+├── README.md
+├── .env.example
+├── moneyswap/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── celery.py
+└── swap_app/
+    ├── migrations/
+    │   └── __init__.py
+    ├── templates/
+    │   └── swap_app/
+    │       ├── base.html
+    │       ├── home.html
+    │       ├── register.html
+    │       ├── login.html
+    │       ├── dashboard.html
+    │       ├── create_swap.html
+    │       ├── swap_list.html
+    │       ├── swap_detail.html
+    │       ├── upload_proof.html
+    │       ├── agent_dashboard.html
+    │       ├── agent_wallet.html
+    │       ├── agent_transactions.html
+    │       ├── agent_list.html
+    │       ├── notifications.html
+    │       └── accounts.html
+    ├── static/
+    │   └── swap_app/
+    │       ├── style.css
+    │       └── logo.png
+    ├── __init__.py
+    ├── admin.py
+    ├── apps.py
+    ├── models.py
+    ├── forms.py
+    ├── views.py
+    ├── urls.py
+    ├── tasks.py
+    ├── context_processors.py
+    └── signals.py

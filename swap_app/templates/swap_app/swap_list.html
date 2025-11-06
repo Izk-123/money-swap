@@ -1,0 +1,240 @@
+{% extends 'swap_app/base.html' %}
+
+{% block title %}My Swaps - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-list-ul"></i> My Swap Requests
+    </h1>
+    <a href="{% url 'create_swap' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> New Swap
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card swap-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h6 class="card-title">Filter Swaps</h6>
+                <div class="btn-group" role="group">
+                    <a href="?status=all" class="btn btn-outline-primary {% if request.GET.status == 'all' or not request.GET.status %}active{% endif %}">All</a>
+                    <a href="?status=pending" class="btn btn-outline-warning {% if request.GET.status == 'pending' %}active{% endif %}">Pending</a>
+                    <a href="?status=active" class="btn btn-outline-info {% if request.GET.status == 'active' %}active{% endif %}">Active</a>
+                    <a href="?status=complete" class="btn btn-outline-success {% if request.GET.status == 'complete' %}active{% endif %}">Completed</a>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search reference..." id="searchInput">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Swaps Table -->
+<div class="card swap-card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Swap History</h5>
+    </div>
+    <div class="card-body">
+        {% if swaps %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="swapsTable">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Amount</th>
+                        <th>To Service</th>
+                        <th>Agent</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for swap in swaps %}
+                    <tr>
+                        <td>
+                            <strong>{{ swap.reference }}</strong>
+                            {% if swap.status == 'PENDING' %}
+                            <br><small class="text-muted">Waiting for agent</small>
+                            {% elif swap.status == 'ACCEPTED' %}
+                            <br><small class="text-info">Ready for payment</small>
+                            {% elif swap.status == 'PAID_BANK' %}
+                            <br><small class="text-warning">Waiting for agent</small>
+                            {% elif swap.status == 'SENT_WALLET' %}
+                            <br><small class="text-success">Confirm receipt</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            MWK {{ swap.amount|floatformat:2 }}
+                            <br><small class="text-muted">Net: MWK {{ swap.net_amount|floatformat:2 }}</small>
+                        </td>
+                        <td>
+                            {{ swap.get_to_service_display }}
+                            <br><small class="text-muted">To: {{ swap.dest_number }}</small>
+                        </td>
+                        <td>
+                            {% if swap.agent %}
+                            {{ swap.agent.user.username }}
+                            <br>
+                            <small class="text-warning">
+                                <i class="bi bi-star-fill"></i> {{ swap.agent.rating }}
+                            </small>
+                            {% else %}
+                            <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if swap.status == 'COMPLETE' %}bg-success
+                                {% elif swap.status == 'PENDING' %}bg-warning
+                                {% elif swap.status == 'REJECTED' or swap.status == 'CANCELLED' %}bg-danger
+                                {% elif swap.status == 'ACCEPTED' %}bg-info
+                                {% elif swap.status == 'PAID_BANK' %}bg-primary
+                                {% elif swap.status == 'SENT_WALLET' %}bg-success
+                                {% else %}bg-secondary{% endif %}">
+                                {{ swap.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ swap.created_at|date:"M d" }}
+                            <br><small class="text-muted">{{ swap.created_at|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'swap_detail' swap.id %}" class="btn btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                {% if swap.status == 'ACCEPTED' %}
+                                <a href="{% url 'upload_proof' swap.id %}" class="btn btn-outline-success" title="Upload Payment Proof">
+                                    <i class="bi bi-upload"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if swap.status == 'SENT_WALLET' %}
+                                <form method="post" action="{% url 'complete_swap' swap.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-success" title="Confirm Receipt">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Swap pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-arrow-left-right display-1 text-muted"></i>
+            <h4 class="mt-3">No swaps yet</h4>
+            <p class="text-muted">You haven't created any swap requests yet.</p>
+            <a href="{% url 'create_swap' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Your First Swap
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Status Legend -->
+<div class="card swap-card mt-4">
+    <div class="card-header">
+        <h6 class="card-title mb-0">Status Legend</h6>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col">
+                <span class="badge bg-warning">Pending</span>
+                <small class="d-block text-muted">Waiting for agent</small>
+            </div>
+            <div class="col">
+                <span class="badge bg-info">Accepted</span>
+                <small class="d-block text-muted">Ready for payment</small>
+            </div>
+            <div class="col">
+                <span class="badge bg-primary">Paid</span>
+                <small class="d-block text-muted">Proof uploaded</small>
+            </div>
+            <div class="col">
+                <span class="badge bg-success">Complete</span>
+                <small class="d-block text-muted">Swap finished</small>
+            </div>
+            <div class="col">
+                <span class="badge bg-danger">Rejected/Cancelled</span>
+                <small class="d-block text-muted">Swap failed</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const table = document.getElementById('swapsTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    function filterTable() {
+        const filter = searchInput.value.toLowerCase();
+        for (let i = 0; i < rows.length; i++) {
+            const reference = rows[i].getElementsByTagName('td')[0].textContent.toLowerCase();
+            if (reference.includes(filter)) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+
+    searchButton.addEventListener('click', filterTable);
+    searchInput.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            filterTable();
+        }
+    });
+});
+</script>
+{% endblock %}

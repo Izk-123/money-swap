@@ -1,0 +1,55 @@
+{% extends 'swap_app/base.html' %}
+
+{% block title %}Home - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-50 py-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4">Swap Money Instantly</h1>
+        <p class="lead mb-4">
+            Transfer between banks and mobile money services in Malawi with low fees and instant matching.
+        </p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-4 me-md-2">Go to Dashboard</a>
+            {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6 text-center">
+        <img src="https://via.placeholder.com/500x300" alt="MoneySwap" class="img-fluid rounded shadow">
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-md-4 text-center mb-4">
+        <div class="card swap-card h-100">
+            <div class="card-body">
+                <i class="bi bi-arrow-left-right display-4 text-primary"></i>
+                <h3 class="card-title h4 mt-3">Low Fees</h3>
+                <p class="card-text">Only 0.6% total fee (0.15% platform + 0.45% agent). Save compared to traditional methods.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="card swap-card h-100">
+            <div class="card-body">
+                <i class="bi bi-lightning-charge display-4 text-primary"></i>
+                <h3 class="card-title h4 mt-3">Fast Matching</h3>
+                <p class="card-text">Instant matching with verified agents. Complete swaps in minutes, not hours.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="card swap-card h-100">
+            <div class="card-body">
+                <i class="bi bi-shield-check display-4 text-primary"></i>
+                <h3 class="card-title h4 mt-3">Secure</h3>
+                <p class="card-text">Dual confirmation system with receipt uploads. Your money is safe with us.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
