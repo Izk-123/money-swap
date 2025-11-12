@@ -5,18 +5,58 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card swap-card">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-box-arrow-in-right"></i> Login to MoneySwap
+                </h4>
+            </div>
             <div class="card-body">
-                <h2 class="card-title text-center mb-4">Login</h2>
                 <form method="post">
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               placeholder="Enter your username">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required 
+                               placeholder="Enter your password">
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Remember me</label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Don't have an account? <a href="{% url 'register' %}">Register here</a>
+                        </small>
+                    </div>
                 </form>
-                <div class="text-center mt-3">
-                    <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
-                </div>
+            </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <h6 class="card-title">
+                    <i class="bi bi-shield-lock"></i> Secure Platform
+                </h6>
+                <p class="card-text small text-muted mb-0">
+                    🔒 Encrypted communications • 🔍 Transaction verification • ⛓️ Blockchain audit trail
+                </p>
             </div>
         </div>
     </div>

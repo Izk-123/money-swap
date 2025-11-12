@@ -5,253 +5,376 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-8">
-        <div class="card swap-card">
+    <div class="col-lg-8">
+        <!-- Swap Header -->
+        <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="card-title mb-0">
+                <h4 class="card-title mb-0">
                     <i class="bi bi-arrow-left-right"></i> Swap {{ swap.reference }}
-                </h2>
-                <span class="badge 
-                    {% if swap.status == 'COMPLETE' %}bg-success
-                    {% elif swap.status == 'PENDING' %}bg-warning
-                    {% elif swap.status == 'REJECTED' or swap.status == 'CANCELLED' %}bg-danger
-                    {% else %}bg-info{% endif %} fs-6">
-                    {{ swap.get_status_display }}
+                </h4>
+                <span class="badge bg-{% if swap.status == 'COMPLETE' %}success{% elif swap.status == 'PENDING' %}warning{% elif swap.status == 'DISPUTE' %}danger{% else %}primary{% endif %} fs-6">
+                    {{ swap.status|title }}
                 </span>
             </div>
             <div class="card-body">
-                <!-- Swap Details -->
-                <div class="row mb-4">
+                <div class="row">
                     <div class="col-md-6">
-                        <h5>Swap Details</h5>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Amount:</th>
-                                <td class="fw-bold">MWK {{ swap.amount|floatformat:2|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <th>From:</th>
-                                <td>{{ swap.get_from_service_display }}</td>
-                            </tr>
-                            <tr>
-                                <th>To:</th>
-                                <td>{{ swap.get_to_service_display }}</td>
-                            </tr>
-                            <tr>
-                                <th>Recipient:</th>
-                                <td>{{ swap.dest_number }}</td>
-                            </tr>
-                            <tr>
-                                <th>Created:</th>
-                                <td>{{ swap.created_at|date:"M d, Y H:i" }}</td>
-                            </tr>
-                        </table>
+                        <h6>Swap Details</h6>
+                        <p class="mb-1"><strong>Amount:</strong> MWK {{ swap.amount|floatformat:2|intcomma }}</p>
+                        <p class="mb-1"><strong>Net Amount:</strong> MWK {{ swap.net_amount|floatformat:2|intcomma }}</p>
+                        <p class="mb-1"><strong>From:</strong> {{ swap.get_from_service_display }}</p>
+                        <p class="mb-1"><strong>To:</strong> {{ swap.get_to_service_display }}</p>
+                        <p class="mb-0"><strong>Destination:</strong> {{ swap.dest_number }}</p>
                     </div>
                     <div class="col-md-6">
-                        <h5>Fees & Commission</h5>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>Platform Fee:</th>
-                                <td class="text-danger">MWK {{ swap.platform_fee|floatformat:2 }}</td>
-                            </tr>
-                            <tr>
-                                <th>Agent Fee:</th>
-                                <td class="text-warning">MWK {{ swap.agent_fee|floatformat:2 }}</td>
-                            </tr>
-                            <tr>
-                                <th>Total Fees:</th>
-                                <td class="text-danger fw-bold">MWK {{ swap.platform_fee|add:swap.agent_fee|floatformat:2 }}</td>
-                            </tr>
-                            <tr>
-                                <th>You Receive:</th>
-                                <td class="text-success fw-bold">MWK {{ swap.net_amount|floatformat:2|intcomma }}</td>
-                            </tr>
-                        </table>
+                        <h6>Parties</h6>
+                        <p class="mb-1"><strong>Client:</strong> {{ swap.client.username }}</p>
+                        <p class="mb-1"><strong>Agent:</strong> {{ swap.agent.user.username }}</p>
+                        <p class="mb-1"><strong>Created:</strong> {{ swap.created_at|date:"M d, Y H:i" }}</p>
+                        {% if swap.completed_at %}
+                        <p class="mb-0"><strong>Completed:</strong> {{ swap.completed_at|date:"M d, Y H:i" }}</p>
+                        {% endif %}
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Agent Information -->
-                {% if swap.agent %}
-                <div class="card bg-light mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-person-badge"></i> Assigned Agent
-                        </h5>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name={{ swap.agent.user.username }}&background=0D8ABC&color=fff" 
-                                 alt="{{ swap.agent.user.username }}" class="rounded-circle me-3" width="50" height="50">
-                            <div>
-                                <h6 class="mb-1">{{ swap.agent.user.username }}</h6>
-                                <p class="text-muted mb-1">
-                                    <i class="bi bi-star-fill text-warning"></i> Rating: {{ swap.agent.rating }}/5.0
-                                </p>
-                                {% if swap.agent.user.location_address %}
-                                <p class="text-muted mb-0">
-                                    <i class="bi bi-geo-alt"></i> {{ swap.agent.user.location_address }}
-                                </p>
+        <!-- Fee Breakdown -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Fee Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <small class="text-muted">Platform Fee</small>
+                        <h6 class="mb-0">MWK {{ swap.platform_fee|floatformat:2|intcomma }}</h6>
+                        <small class="text-muted">0.15%</small>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted">Agent Fee</small>
+                        <h6 class="mb-0">MWK {{ swap.agent_fee|floatformat:2|intcomma }}</h6>
+                        <small class="text-muted">0.45%</small>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted">Total Fee</small>
+                        <h6 class="mb-0">MWK {{ swap.platform_fee|add:swap.agent_fee|floatformat:2|intcomma }}</h6>
+                        <small class="text-muted">0.6%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proofs Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Transaction Proofs</h6>
+            </div>
+            <div class="card-body">
+                <!-- Client Proof -->
+                <div class="mb-3">
+                    <h6>Client Payment Proof</h6>
+                    {% if swap.proofs.filter uploaded_by=swap.client %}
+                        {% for proof in swap.proofs.filter uploaded_by=swap.client %}
+                        <div class="card {% if proof.status == 'verified' %}border-success{% elif proof.status == 'rejected' %}border-danger{% else %}border-warning{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ proof.get_proof_type_display }}</strong>
+                                        <br>
+                                        <small class="text-muted">Uploaded: {{ proof.created_at|date:"M d, Y H:i" }}</small>
+                                        <br>
+                                        <span class="badge bg-{% if proof.status == 'verified' %}success{% elif proof.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                            {{ proof.status|title }}
+                                        </span>
+                                        {% if proof.confidence_score > 0 %}
+                                        <span class="badge bg-info">Confidence: {{ proof.confidence_score|floatformat:1 }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if proof.image_file %}
+                                        <a href="{{ proof.image_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if proof.sms_text %}
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <small>{{ proof.sms_text|truncatewords:30 }}</small>
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Action Buttons -->
-                <div class="action-buttons mt-4">
-                    {% if user.role == 'client' %}
-                        {% if swap.status == 'PENDING' %}
+                        {% endfor %}
+                    {% else %}
                         <div class="alert alert-warning">
-                            <i class="bi bi-clock"></i> Waiting for agent to accept your request
+                            <i class="bi bi-exclamation-triangle"></i> No client proof uploaded yet.
+                            {% if user == swap.client and swap.status == 'ACCEPTED' %}
+                            <a href="{% url 'upload_client_proof' swap.pk %}" class="alert-link">Upload proof now</a>
+                            {% endif %}
                         </div>
-                        {% elif swap.status == 'ACCEPTED' %}
-                        <div class="alert alert-info">
-                            <i class="bi bi-check-circle"></i> Agent accepted your request. Please make payment and upload proof.
-                            <div class="mt-2">
-                                <a href="{% url 'upload_proof' swap.id %}" class="btn btn-primary">
-                                    <i class="bi bi-upload"></i> Upload Payment Proof
-                                </a>
-                            </div>
-                        </div>
-                        {% elif swap.status == 'SENT_WALLET' %}
-                        <div class="alert alert-success">
-                            <i class="bi bi-check-circle"></i> Agent sent wallet payment. Please confirm receipt.
-                            <form method="post" action="{% url 'complete_swap' swap.id %}" class="mt-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-check-lg"></i> Confirm Receipt
-                                </button>
-                            </form>
-                        </div>
-                        {% endif %}
-
-                    {% elif user.role == 'agent' and swap.agent.user == user %}
-                        {% if swap.status == 'PENDING' %}
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">Respond to Swap Request</h6>
-                            </div>
-                            <div class="card-body">
-                                <form method="post" action="{% url 'agent_respond' swap.id %}" id="response-form">
-                                    {% csrf_token %}
-                                    <div class="mb-3">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="action" id="accept" value="accept" checked>
-                                            <label class="form-check-label text-success" for="accept">
-                                                <i class="bi bi-check-circle"></i> Accept
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="action" id="reject" value="reject">
-                                            <label class="form-check-label text-danger" for="reject">
-                                                <i class="bi bi-x-circle"></i> Reject
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="reason" class="form-label">Reason (optional for rejection):</label>
-                                        <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Optional reason for rejection..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Submit Response</button>
-                                </form>
-                            </div>
-                        </div>
-                        {% elif swap.status == 'PAID_BANK' %}
-                        <div class="alert alert-info">
-                            <i class="bi bi-check-circle"></i> Client uploaded payment proof. Please send wallet payment.
-                            <form method="post" action="{% url 'agent_send' swap.id %}" class="mt-2">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="txid" class="form-label">Transaction ID (from mobile money):</label>
-                                    <input type="text" class="form-control" id="txid" name="txid" required 
-                                           placeholder="Enter the transaction ID from TNM Mpamba or Airtel Money">
-                                </div>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-send"></i> Mark as Sent
-                                </button>
-                            </form>
-                        </div>
-                        {% endif %}
                     {% endif %}
                 </div>
 
-                <!-- Transaction Logs -->
-                <div class="mt-4">
-                    <h5>Transaction History</h5>
-                    <div class="list-group">
-                        {% for log in swap.logs.all %}
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ log.type }}</h6>
-                                <small class="text-muted">{{ log.created_at|timesince }} ago</small>
+                <!-- Agent Proof -->
+                <div class="mb-3">
+                    <h6>Agent Send Proof</h6>
+                    {% if swap.proofs.filter uploaded_by=swap.agent.user %}
+                        {% for proof in swap.proofs.filter uploaded_by=swap.agent.user %}
+                        <div class="card {% if proof.status == 'verified' %}border-success{% elif proof.status == 'rejected' %}border-danger{% else %}border-warning{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ proof.get_proof_type_display }}</strong>
+                                        <br>
+                                        <small class="text-muted">Uploaded: {{ proof.created_at|date:"M d, Y H:i" }}</small>
+                                        <br>
+                                        <span class="badge bg-{% if proof.status == 'verified' %}success{% elif proof.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                            {{ proof.status|title }}
+                                        </span>
+                                        {% if proof.confidence_score > 0 %}
+                                        <span class="badge bg-info">Confidence: {{ proof.confidence_score|floatformat:1 }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if proof.image_file %}
+                                        <a href="{{ proof.image_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if proof.sms_text %}
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <small>{{ proof.sms_text|truncatewords:30 }}</small>
+                                </div>
+                                {% endif %}
                             </div>
-                            {% if log.provider_tx_id %}
-                            <p class="mb-1">Transaction ID: <code>{{ log.provider_tx_id }}</code></p>
-                            {% endif %}
-                            {% if log.payload %}
-                            <small class="text-muted">Details: {{ log.payload }}</small>
-                            {% endif %}
-                        </div>
-                        {% empty %}
-                        <div class="list-group-item text-muted text-center">
-                            No transaction logs yet
                         </div>
                         {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sidebar -->
-    <div class="col-md-4">
-        <!-- Quick Actions -->
-        <div class="card swap-card mb-4">
-            <div class="card-header">
-                <h6 class="card-title mb-0">Quick Actions</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{% url 'create_swap' %}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> New Swap
-                    </a>
-                    <a href="{% url 'client_swaps' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-list-ul"></i> My Swaps
-                    </a>
-                    {% if user.role == 'agent' %}
-                    <a href="{% url 'agent_dashboard' %}" class="btn btn-outline-success">
-                        <i class="bi bi-speedometer2"></i> Agent Dashboard
-                    </a>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> No agent proof uploaded yet.
+                            {% if user == swap.agent.user and swap.status == 'CLIENT_PROOF_UPLOADED' %}
+                            <a href="{% url 'upload_agent_proof' swap.pk %}" class="alert-link">Upload proof now</a>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Status Guide -->
-        <div class="card swap-card">
-            <div class="card-header">
-                <h6 class="card-title mb-0">Status Guide</h6>
+        <!-- Actions -->
+        {% if user == swap.client %}
+            {% if swap.status == 'PENDING' %}
+            <div class="alert alert-info">
+                <i class="bi bi-clock"></i> Waiting for agent to accept your swap request.
+            </div>
+            {% elif swap.status == 'ACCEPTED' %}
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">Send Money to Agent</h6>
+                </div>
+                <div class="card-body">
+                    {% with payment_details=swap.agent.get_payment_details swap.from_service %}
+                    {% if payment_details %}
+                        <p>Send <strong>MWK {{ swap.amount|floatformat:2|intcomma }}</strong> to:</p>
+                        <div class="p-3 bg-light rounded mb-3">
+                            {% if payment_details.type == 'bank' %}
+                            <p class="mb-1"><strong>Bank:</strong> {{ payment_details.bank_name }}</p>
+                            <p class="mb-1"><strong>Account Number:</strong> {{ payment_details.account_number }}</p>
+                            <p class="mb-0"><strong>Account Name:</strong> {{ payment_details.account_name }}</p>
+                            {% elif payment_details.type == 'mobile_money' %}
+                            <p class="mb-1"><strong>Provider:</strong> {{ payment_details.provider }}</p>
+                            <p class="mb-0"><strong>Number:</strong> {{ payment_details.number }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="alert alert-warning">
+                            <small>
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Important:</strong> Use reference <strong>{{ swap.reference }}</strong> when sending money.
+                            </small>
+                        </div>
+                        <a href="{% url 'upload_client_proof' swap.pk %}" class="btn btn-success">
+                            <i class="bi bi-upload"></i> I've Sent the Money - Upload Proof
+                        </a>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            Agent payment details not available. Please contact support.
+                        </div>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        <!-- Dispute Section -->
+        {% if swap.status != 'COMPLETE' and swap.status != 'CANCELLED' and swap.status != 'EXPIRED' %}
+        <div class="card border-warning mt-4">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0">Having Issues?</h6>
             </div>
             <div class="card-body">
-                <div class="status-guide">
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-warning me-2">●</span>
-                        <small>Pending - Waiting for agent</small>
+                <p>If you're experiencing problems with this swap, you can open a dispute.</p>
+                <a href="{% url 'create_dispute' swap.pk %}" class="btn btn-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Open Dispute
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Status Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Swap Timeline</h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item {% if swap.status != 'PENDING' %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Swap Created</h6>
+                            <small class="text-muted">{{ swap.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-info me-2">●</span>
-                        <small>Accepted - Agent accepted</small>
+                    
+                    {% if swap.agent_response_at %}
+                    <div class="timeline-item {% if swap.status not in ['PENDING', 'ACCEPTED'] %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Agent Accepted</h6>
+                            <small class="text-muted">{{ swap.agent_response_at|date:"M d, Y H:i" }}</small>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-primary me-2">●</span>
-                        <small>Paid - Payment proof uploaded</small>
+                    {% endif %}
+                    
+                    {% if swap.client_proof_uploaded_at %}
+                    <div class="timeline-item {% if swap.status not in ['PENDING', 'ACCEPTED', 'CLIENT_PROOF_UPLOADED'] %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Client Proof Uploaded</h6>
+                            <small class="text-muted">{{ swap.client_proof_uploaded_at|date:"M d, Y H:i" }}</small>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-success me-2">●</span>
-                        <small>Complete - Transaction finished</small>
+                    {% endif %}
+                    
+                    {% if swap.agent_proof_uploaded_at %}
+                    <div class="timeline-item {% if swap.status == 'COMPLETE' %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Agent Proof Uploaded</h6>
+                            <small class="text-muted">{{ swap.agent_proof_uploaded_at|date:"M d, Y H:i" }}</small>
+                        </div>
                     </div>
+                    {% endif %}
+                    
+                    {% if swap.completed_at %}
+                    <div class="timeline-item completed">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Swap Completed</h6>
+                            <small class="text-muted">{{ swap.completed_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Agent Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <h5 class="mt-2 mb-1">{{ swap.agent.user.username }}</h5>
+                    <div class="mb-2">
+                        <span class="badge bg-{% if swap.agent.trust_score >= 80 %}success{% elif swap.agent.trust_score >= 60 %}warning{% else %}danger{% endif %}">
+                            {{ swap.agent.trust_score }}% Trust
+                        </span>
+                        <span class="badge bg-info">{{ swap.agent.completed_swaps }} swaps</span>
+                    </div>
+                </div>
+                
+                <div class="small">
+                    <p class="mb-1">
+                        <i class="bi bi-clock"></i> 
+                        {{ swap.agent.average_response_time|floatformat:0 }}min avg response
+                    </p>
+                    <p class="mb-1">
+                        <i class="bi bi-graph-up"></i> 
+                        {{ swap.agent.completion_rate|floatformat:0 }}% completion rate
+                    </p>
+                    {% if swap.agent.user.location_address %}
+                    <p class="mb-0">
+                        <i class="bi bi-geo-alt"></i> 
+                        {{ swap.agent.user.location_address }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Information -->
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <h6>Need Help?</h6>
+                <p class="small text-muted mb-2">Contact our support team for assistance</p>
+                <div class="btn-group w-100">
+                    <a href="tel:+265888123456" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-telephone"></i> Call
+                    </a>
+                    <a href="https://wa.me/265888123456" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-whatsapp"></i> WhatsApp
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #dee2e6;
+    border: 3px solid white;
+}
+.timeline-item.completed .timeline-marker {
+    background: #198754;
+}
+.timeline-content h6 {
+    margin-bottom: 5px;
+}
+.timeline:before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+</style>
 {% endblock %}

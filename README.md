@@ -1,17 +1,9 @@
-# MoneySwap - Peer-to-Peer Money Swapping Platform
+# 💰 MoneySwap v2 - Peer-to-Peer Money Swapping Platform
 
-A Django-based platform that enables cheap money transfers between banks and mobile money services in Malawi.
+A Django-based platform for swapping money between banks and mobile money services in Malawi.
 
-## 🚀 Quick Start for Local Testing
+> ⚠️ **Important Legal Notice**: MoneySwap does NOT hold user funds. The platform acts as a matching and verification service only. All financial transactions occur directly between users.
 
-### Prerequisites
-- Python 3.8+
-- Redis (for Celery tasks)
+## 🎯 How It Works
 
-### Installation
-
-1. **Extract and setup**
-```bash
-cd moneyswap
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+### 🔄 Money Flow (No Platform Holding)

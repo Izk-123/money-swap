@@ -1,0 +1,232 @@
+{% extends 'swap_app/base.html' %}
+{% load humanize %}
+
+{% block title %}Swap Accepted - MoneySwap{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-check-circle"></i> Swap Accepted!
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-check-circle-fill display-1 text-success"></i>
+                    <h3 class="mt-3">Your Swap Has Been Accepted</h3>
+                    <p class="lead">Agent <strong>{{ swap.agent.user.username }}</strong> has accepted your swap request.</p>
+                </div>
+
+                <!-- Swap Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Swap Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Reference:</strong> {{ swap.reference }}</p>
+                                <p><strong>Amount:</strong> MWK {{ swap.amount|floatformat:2|intcomma }}</p>
+                                <p><strong>Net Amount:</strong> MWK {{ swap.net_amount|floatformat:2|intcomma }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>From:</strong> {{ swap.get_from_service_display }}</p>
+                                <p><strong>To:</strong> {{ swap.get_to_service_display }}</p>
+                                <p><strong>Destination:</strong> {{ swap.dest_number }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Instructions -->
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-credit-card"></i> Send Payment to Agent
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> Important Instructions</h6>
+                            <p class="mb-0">
+                                Please send <strong>exactly MWK {{ swap.amount|floatformat:2|intcomma }}</strong> 
+                                to the agent's account below. The agent will then send 
+                                <strong>MWK {{ swap.net_amount|floatformat:2|intcomma }}</strong> 
+                                to your {{ swap.to_service }} number.
+                            </p>
+                        </div>
+
+                        {% with payment_details=swap.agent.get_payment_details swap.from_service %}
+                        {% if payment_details %}
+                        <div class="payment-details p-4 bg-light rounded mb-4">
+                            <h5 class="text-center mb-4">Send Money To:</h5>
+                            
+                            {% if payment_details.type == 'bank' %}
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body">
+                                            <i class="bi bi-bank display-4 text-success mb-3"></i>
+                                            <h6>Bank Name</h6>
+                                            <p class="fs-5 fw-bold">{{ payment_details.bank_name }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-info h-100">
+                                        <div class="card-body">
+                                            <i class="bi bi-credit-card display-4 text-info mb-3"></i>
+                                            <h6>Account Number</h6>
+                                            <p class="fs-5 fw-bold">{{ payment_details.account_number }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-body">
+                                            <i class="bi bi-person display-4 text-warning mb-3"></i>
+                                            <h6>Account Name</h6>
+                                            <p class="fs-5 fw-bold">{{ payment_details.account_name }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% elif payment_details.type == 'mobile_money' %}
+                            <div class="row text-center">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-primary h-100">
+                                        <div class="card-body">
+                                            <i class="bi bi-phone display-4 text-primary mb-3"></i>
+                                            <h6>Provider</h6>
+                                            <p class="fs-5 fw-bold">{{ payment_details.provider }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body">
+                                            <i class="bi bi-telephone display-4 text-success mb-3"></i>
+                                            <h6>Phone Number</h6>
+                                            <p class="fs-5 fw-bold">{{ payment_details.number }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Agent payment details are not available. Please contact support.
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+
+                        <!-- Reference Number -->
+                        <div class="alert alert-warning">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle fs-4 me-3"></i>
+                                <div>
+                                    <strong class="d-block">Important: Use This Reference</strong>
+                                    When sending money, you MUST include this reference number:
+                                    <div class="mt-2">
+                                        <code class="fs-4 bg-warning p-2 rounded">{{ swap.reference }}</code>
+                                    </div>
+                                    <small class="d-block mt-1">
+                                        Without this reference, the agent cannot verify your payment.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Notice -->
+                        <div class="alert alert-danger">
+                            <h6><i class="bi bi-shield-exclamation"></i> Security Notice</h6>
+                            <ul class="mb-0">
+                                <li>MoneySwap <strong>never holds your funds</strong> - all transfers are direct</li>
+                                <li>Only send money to the verified agent details shown above</li>
+                                <li>Never share your PIN, password, or OTP with anyone</li>
+                                <li>Keep your transaction proof (SMS/screenshot) for verification</li>
+                            </ul>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="{% url 'upload_client_proof' swap.pk %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-upload"></i> I've Sent the Money - Upload Proof
+                            </a>
+                            <a href="{% url 'swap_detail' swap.pk %}" class="btn btn-outline-secondary ms-2">
+                                View Swap Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">What Happens Next?</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="step-number">1</div>
+                                <h6>Send Payment</h6>
+                                <p class="small text-muted">Send exact amount to agent's account with reference</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="step-number">2</div>
+                                <h6>Upload Proof</h6>
+                                <p class="small text-muted">Upload SMS or screenshot as payment proof</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="step-number">3</div>
+                                <h6>Receive Funds</h6>
+                                <p class="small text-muted">Agent sends money to your wallet after verification</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support Information -->
+                <div class="card mt-4 border-warning">
+                    <div class="card-body text-center">
+                        <h6>Need Help?</h6>
+                        <p class="text-muted mb-3">Contact our support team if you have any issues</p>
+                        <div class="btn-group">
+                            <a href="tel:+265888123456" class="btn btn-outline-primary">
+                                <i class="bi bi-telephone"></i> Call Support
+                            </a>
+                            <a href="https://wa.me/265888123456" class="btn btn-outline-success">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="mailto:support@moneyswap.mw" class="btn btn-outline-info">
+                                <i class="bi bi-envelope"></i> Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: #0d6efd;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: bold;
+}
+.payment-details {
+    border: 2px dashed #0d6efd;
+}
+</style>
+{% endblock %}

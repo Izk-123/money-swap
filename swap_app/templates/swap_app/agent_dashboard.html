@@ -4,190 +4,527 @@
 {% block title %}Agent Dashboard - MoneySwap{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">
-        <i class="bi bi-speedometer2"></i> Agent Dashboard
-    </h1>
-    <button id="toggle-online" class="btn {% if agent.is_online %}btn-success{% else %}btn-secondary{% endif %}">
-        <i class="bi bi-circle-fill"></i> 
-        {% if agent.is_online %}Online{% else %}Offline{% endif %}
-    </button>
+<div class="row">
+    <!-- Header -->
+    <div class="col-12 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="card-title">Agent Dashboard</h2>
+                        <p class="card-text">
+                            Welcome back, {{ agent.user.username }}! Manage your swaps and help clients exchange money.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button id="toggleOnlineBtn" class="btn btn-lg {% if agent.is_online %}btn-success{% else %}btn-outline-light{% endif %}">
+                            <i class="bi bi-power"></i>
+                            {% if agent.is_online %}Online{% else %}Offline{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Stats Cards -->
 <div class="row">
     <div class="col-md-3 mb-4">
-        <div class="card swap-card text-center">
-            <div class="card-body">
-                <h3 class="card-title text-primary">{{ agent.swap_requests.count }}</h3>
-                <p class="card-text">Total Swaps</p>
+        <div class="card swap-card">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-exchange display-4 text-primary"></i>
+                <h3 class="h2 mt-2">{{ pending_swaps }}</h3>
+                <p class="text-muted mb-0">Pending Requests</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 mb-4">
-        <div class="card swap-card text-center">
-            <div class="card-body">
-                <h3 class="card-title text-warning">{{ pending_requests }}</h3>
-                <p class="card-text">Pending Requests</p>
+        <div class="card swap-card">
+            <div class="card-body text-center">
+                <i class="bi bi-clock display-4 text-warning"></i>
+                <h3 class="h2 mt-2">{{ active_swaps }}</h3>
+                <p class="text-muted mb-0">Active Swaps</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 mb-4">
-        <div class="card swap-card text-center">
-            <div class="card-body">
-                <h3 class="card-title text-info">{{ active_swaps }}</h3>
-                <p class="card-text">Active Swaps</p>
+        <div class="card swap-card">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up display-4 text-success"></i>
+                <h3 class="h2 mt-2">{{ success_rate }}%</h3>
+                <p class="text-muted mb-0">Success Rate</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 mb-4">
-        <div class="card swap-card text-center">
-            <div class="card-body">
-                <h3 class="card-title text-success">{{ success_rate }}%</h3>
-                <p class="card-text">Success Rate</p>
+        <div class="card swap-card">
+            <div class="card-body text-center">
+                <i class="bi bi-wallet display-4 text-info"></i>
+                <h3 class="h2 mt-2">{{ agent.completed_swaps }}</h3>
+                <p class="text-muted mb-0">Total Completed</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Earnings -->
+<!-- Earnings Summary -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Weekly Earnings</h6>
+                <h3 class="text-success">MWK {{ weekly_earnings|floatformat:2|intcomma }}</h3>
+                <small class="text-muted">Last 7 days</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Monthly Earnings</h6>
+                <h3 class="text-primary">MWK {{ monthly_earnings|floatformat:2|intcomma }}</h3>
+                <small class="text-muted">Last 30 days</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Awaiting Send</h6>
+                <h3 class="text-warning">{{ awaiting_send }}</h3>
+                <small class="text-muted">Client proofs uploaded</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trust Score -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Your Trust Score</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Trust Score</span>
+                                <strong class="text-{% if agent.trust_score >= 80 %}success{% elif agent.trust_score >= 60 %}warning{% else %}danger{% endif %}">
+                                    {{ agent.trust_score }}% - {{ agent.trust_level }}
+                                </strong>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar progress-bar-striped bg-{% if agent.trust_score >= 80 %}success{% elif agent.trust_score >= 60 %}warning{% else %}danger{% endif %}" 
+                                     style="width: {{ agent.trust_score }}%">
+                                    {{ agent.trust_score }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="border-start ps-3">
+                            <div class="mb-2">
+                                <small class="text-muted">Response Time</small>
+                                <div class="fw-bold">{{ agent.average_response_time|floatformat:0 }}min</div>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Completion Rate</small>
+                                <div class="fw-bold">{{ agent.completion_rate|floatformat:0 }}%</div>
+                            </div>
+                            <div>
+                                <small class="text-muted">Experience</small>
+                                <div class="fw-bold">{{ agent.completed_swaps }} swaps</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <a href="{% url 'agent_list' %}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="bi bi-eye display-6 d-block mb-2"></i>
+                            View All Agents
+                        </a>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <a href="#" class="btn btn-outline-info w-100 py-3" data-bs-toggle="modal" data-bs-target="#paymentDetailsModal">
+                            <i class="bi bi-bank display-6 d-block mb-2"></i>
+                            Payment Details
+                        </a>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <a href="#" class="btn btn-outline-warning w-100 py-3" data-bs-toggle="modal" data-bs-target="#earningsModal">
+                            <i class="bi bi-graph-up display-6 d-block mb-2"></i>
+                            Earnings Report
+                        </a>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <a href="{% url 'notifications' %}" class="btn btn-outline-success w-100 py-3">
+                            <i class="bi bi-bell display-6 d-block mb-2"></i>
+                            Notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Swap Requests -->
 <div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card swap-card text-center">
-            <div class="card-body">
-                <h3 class="card-title text-primary">MWK {{ weekly_earnings|floatformat:2|intcomma }}</h3>
-                <p class="card-text">Weekly Earnings</p>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Swap Requests</h5>
+                <span class="badge bg-primary">{{ swaps.count }} total</span>
             </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-4">
-        <div class="card swap-card text-center">
             <div class="card-body">
-                <h3 class="card-title text-success">MWK {{ monthly_earnings|floatformat:2|intcomma }}</h3>
-                <p class="card-text">Monthly Earnings</p>
+                {% if swaps %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Client</th>
+                                <th>Amount</th>
+                                <th>To Service</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for swap in swaps %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'swap_detail' swap.pk %}" class="text-decoration-none">
+                                        {{ swap.reference }}
+                                    </a>
+                                </td>
+                                <td>{{ swap.client.username }}</td>
+                                <td>MWK {{ swap.amount|intcomma }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ swap.to_service }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if swap.status == 'COMPLETE' %}success{% elif swap.status == 'PENDING' %}warning{% elif swap.status == 'DISPUTE' %}danger{% else %}primary{% endif %}">
+                                        {{ swap.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ swap.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if swap.status == 'PENDING' %}
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success" onclick="respondToSwap('{{ swap.pk }}', 'accept')">
+                                            Accept
+                                        </button>
+                                        <button class="btn btn-danger" onclick="respondToSwap('{{ swap.pk }}', 'reject')">
+                                            Reject
+                                        </button>
+                                    </div>
+                                    {% elif swap.status == 'CLIENT_PROOF_UPLOADED' %}
+                                    <a href="{% url 'upload_agent_proof' swap.pk %}" class="btn btn-primary btn-sm">
+                                        Upload Send Proof
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'swap_detail' swap.pk %}" class="btn btn-outline-primary btn-sm">
+                                        View
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-arrow-left-right display-1 text-muted"></i>
+                    <h4 class="mt-3">No swap requests yet</h4>
+                    <p class="text-muted">When clients create swap requests, they'll appear here.</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-lightbulb"></i>
+                        <strong>Tip:</strong> Make sure you're online to receive swap requests from clients.
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Pending Requests -->
-<div class="card swap-card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">
-            <i class="bi bi-clock"></i> Pending Swap Requests
-        </h5>
-        <span class="badge bg-warning">{{ pending_requests }}</span>
-    </div>
-    <div class="card-body">
-        {% if pending_requests > 0 %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Reference</th>
-                        <th>Client</th>
-                        <th>Amount</th>
-                        <th>To Service</th>
-                        <th>Created</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for swap in swaps %}
-                    {% if swap.status == 'PENDING' %}
-                    <tr>
-                        <td><a href="{% url 'swap_detail' swap.id %}">{{ swap.reference }}</a></td>
-                        <td>{{ swap.client.username }}</td>
-                        <td>MWK {{ swap.amount|floatformat:2 }}</td>
-                        <td>{{ swap.get_to_service_display }}</td>
-                        <td>{{ swap.created_at|timesince }} ago</td>
-                        <td>
-                            <a href="{% url 'swap_detail' swap.id %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-eye"></i> View
-                            </a>
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Your Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Clients will send money directly to these accounts. Keep them up to date.
+                </div>
+
+                <div class="row">
+                    <!-- Bank Details -->
+                    <div class="col-md-6 mb-4">
+                        <h6>Bank Account</h6>
+                        {% if agent.bank_name and agent.bank_account %}
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Bank:</strong> {{ agent.bank_name }}</p>
+                                <p class="mb-1"><strong>Account Number:</strong> {{ agent.bank_account }}</p>
+                                <p class="mb-0"><strong>Account Name:</strong> {{ agent.user.get_full_name|default:agent.user.username }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Bank details not set up. <a href="#">Update your profile</a> to receive bank transfers.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Mobile Money Details -->
+                    <div class="col-md-6 mb-4">
+                        <h6>Mobile Money</h6>
+                        {% if agent.mpamba_number %}
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>TNM Mpamba:</strong></p>
+                                <p class="mb-0 fs-5">{{ agent.mpamba_number }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if agent.airtel_number %}
+                        <div class="card border-info">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Airtel Money:</strong></p>
+                                <p class="mb-0 fs-5">{{ agent.airtel_number }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if not agent.mpamba_number and not agent.airtel_number %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Mobile money numbers not set up. <a href="#">Update your profile</a>.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <small>
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Security Notice:</strong> Never share your PIN or password with anyone. 
+                        MoneySwap will never ask for your sensitive banking information.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary">Update Payment Details</a>
+            </div>
         </div>
-        {% else %}
-        <p class="text-muted text-center py-3">No pending swap requests.</p>
-        {% endif %}
     </div>
 </div>
 
-<!-- Recent Swaps -->
-<div class="card swap-card mt-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Recent Swaps</h5>
-    </div>
-    <div class="card-body">
-        {% if swaps %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Reference</th>
-                        <th>Client</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for swap in swaps|slice:":10" %}
-                    <tr>
-                        <td><a href="{% url 'swap_detail' swap.id %}">{{ swap.reference }}</a></td>
-                        <td>{{ swap.client.username }}</td>
-                        <td>MWK {{ swap.amount|floatformat:2|intcomma }}</td>
-                        <td>
-                            <span class="badge 
-                                {% if swap.status == 'COMPLETE' %}bg-success
-                                {% elif swap.status == 'PENDING' %}bg-warning
-                                {% elif swap.status == 'REJECTED' or swap.status == 'CANCELLED' %}bg-danger
-                                {% else %}bg-info{% endif %}">
-                                {{ swap.get_status_display }}
-                            </span>
-                        </td>
-                        <td>{{ swap.created_at|date:"M d, Y" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- Earnings Modal -->
+<div class="modal fade" id="earningsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Your Earnings Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>This Week</h6>
+                                <h4 class="text-success">MWK {{ weekly_earnings|floatformat:2|intcomma }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>This Month</h6>
+                                <h4 class="text-primary">MWK {{ monthly_earnings|floatformat:2|intcomma }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>All Time</h6>
+                                <h4 class="text-info">MWK {{ agent.completed_swaps|multiply:250|floatformat:2|intcomma }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6>Recent Completed Swaps</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th>Amount</th>
+                                <th>Your Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for swap in swaps|slice:":5" %}
+                            {% if swap.status == 'COMPLETE' %}
+                            <tr>
+                                <td>{{ swap.completed_at|date:"M d" }}</td>
+                                <td>{{ swap.reference }}</td>
+                                <td>MWK {{ swap.amount|intcomma }}</td>
+                                <td class="text-success">MWK {{ swap.agent_fee|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No completed swaps yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info">
+                    <small>
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> Platform fees (0.15%) are billed monthly via invoice. 
+                        You keep 0.45% of each swap as your earnings.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary">Download Full Report</button>
+            </div>
         </div>
-        {% else %}
-        <p class="text-muted text-center py-3">No swaps yet.</p>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-document.getElementById('toggle-online').addEventListener('click', function() {
+// Toggle online status
+document.getElementById('toggleOnlineBtn').addEventListener('click', function() {
     fetch('{% url "toggle_online" %}', {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
         },
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const button = document.getElementById('toggle-online');
+            const btn = document.getElementById('toggleOnlineBtn');
             if (data.is_online) {
-                button.classList.remove('btn-secondary');
-                button.classList.add('btn-success');
-                button.innerHTML = '<i class="bi bi-circle-fill"></i> Online';
+                btn.classList.remove('btn-outline-light');
+                btn.classList.add('btn-success');
+                btn.innerHTML = '<i class="bi bi-power"></i> Online';
+                
+                // Show success message
+                showToast('You are now online and visible to clients', 'success');
             } else {
-                button.classList.remove('btn-success');
-                button.classList.add('btn-secondary');
-                button.innerHTML = '<i class="bi bi-circle-fill"></i> Offline';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-light');
+                btn.innerHTML = '<i class="bi bi-power"></i> Offline';
+                
+                // Show warning message
+                showToast('You are now offline and hidden from clients', 'warning');
             }
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error updating status', 'danger');
     });
 });
+
+// Respond to swap requests
+function respondToSwap(swapId, action) {
+    fetch(`/swap/${swapId}/respond/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=${action}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            showToast('Error: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error responding to swap', 'danger');
+    });
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    if (!document.getElementById('toastContainer')) {
+        const toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-bg-${type} border-0`;
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.getElementById('toastContainer').appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    // Remove toast after it's hidden
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Auto-refresh the page every 30 seconds to check for new requests
+setTimeout(() => {
+    location.reload();
+}, 30000);
 </script>
 {% endblock %}

@@ -5,18 +5,138 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card swap-card">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-person-plus"></i> Create Account
+                </h4>
+            </div>
             <div class="card-body">
-                <h2 class="card-title text-center mb-4">Create Account</h2>
                 <form method="post">
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
+                    
+                    <!-- Basic Information -->
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2">Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.username|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                        </div>
+                        {{ form.phone_number|as_crispy_field }}
+                    </div>
+
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2">Account Type</h6>
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Client:</strong> Swap money with verified agents<br>
+                                <strong>Agent:</strong> Provide swapping services to clients (requires verification)
+                            </small>
+                        </div>
+                        {{ form.role|as_crispy_field }}
+                    </div>
+
+                    <!-- Location -->
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2">Location (Optional)</h6>
+                        {{ form.location_address|as_crispy_field }}
+                        <div class="form-text">
+                            Your location helps us find nearby agents. This is optional but recommended.
+                        </div>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2">Security</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.password1|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.password2|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms Agreement -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                            <label class="form-check-label" for="agreeTerms">
+                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a>
+                                and understand that MoneySwap does NOT hold funds.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus"></i> Create Account
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Already have an account? <a href="{% url 'login' %}">Login here</a>
+                        </small>
+                    </div>
                 </form>
-                <div class="text-center mt-3">
-                    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+            </div>
+        </div>
+
+        <!-- Legal Notice -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-shield-check"></i> Important Legal Notice
+                </h6>
+                <p class="card-text small">
+                    <strong>MoneySwap acts as a matching service only.</strong> We do not hold, store, 
+                    or transmit user funds. All financial transactions occur directly between users. 
+                    Platform fees are for matching and verification services only.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">MoneySwap Terms of Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Important:</strong> MoneySwap does NOT hold user funds. All transactions are direct between users.
                 </div>
+                
+                <h6>1. Service Nature</h6>
+                <p>MoneySwap provides matching and verification services between clients and agents.</p>
+                
+                <h6>2. No Money Holding</h6>
+                <p>Platform never holds, stores, or transmits user funds. All transactions are P2P.</p>
+                
+                <h6>3. User Responsibilities</h6>
+                <p>Users are responsible for verifying transaction details before sending money.</p>
+                
+                <h6>4. Fee Structure</h6>
+                <p>Total service fee: 0.6% (0.15% platform + 0.45% agent). Minimum fee: MWK 50.</p>
+                
+                <h6>5. Legal Status</h6>
+                <p>Not a financial institution. No RBM licensing required.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
